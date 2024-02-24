@@ -4,22 +4,25 @@ const add = form.querySelector('button')
 const list = document.querySelector('.list')
 
 const taskList = []
-function Task(task){
-  this.name = task
-  this.completed = false
-  this.createdAt = setDate()
-  
-  function setDate(){
-    const today = new Date()
-    return new Intl.DateTimeFormat('pt-br',{
-      day:'numeric',
-      month:'short',
-      year:'numeric',
-      hour:'numeric',
-      minute:'numeric',
-      timeZone: 'America/sao_paulo',
-      timeZoneName: 'short'
-    }).format(today)
+class Task {
+  constructor(task) {
+    this.id = taskList.length + 1;
+    this.name = task;
+    this.completed = false;
+    this.createdAt = setDate();
+
+    function setDate() {
+      const today = new Date();
+      return new Intl.DateTimeFormat('pt-br', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZone: 'America/sao_paulo',
+        timeZoneName: 'short'
+      }).format(today);
+    }
   }
 }
 
@@ -66,44 +69,54 @@ const showTask = ()=>{
 }
 
 
-list.addEventListener('click', e =>{
-  const target = e.target
-  const li = target.parentElement.parentElement
-  const index = li.getAttribute('data-index')
-  const inputTask = li.querySelector('.item__inputTask')
-  
-  if(target.matches('.delete')){
+list.addEventListener('click', handleTaskClick)
+
+function handleTaskClick(event) {
+    const target = event.target
+    const listItem = target.closest('li')
+    const index = parseInt(listItem.dataset.index)
+    const inputTask = listItem.querySelector('.item__inputTask')
+
+    if (target.classList.contains('delete')) {
+        deleteTask(index)
+        showTask()
+    }
+
+    if (target.classList.contains('edit')) {
+        toggleEditTask(listItem, inputTask)
+        if (!target.classList.contains('fa-floppy-disk')) {
+            updateTaskName(index, inputTask.value)
+            showTask()
+        }
+    }
+
+    if (target.classList.contains('input__done')) {
+        toggleTaskCompletion(listItem, index)
+    }
+}
+
+function deleteTask(index) {
     taskList.splice(index, 1)
-    showTask()
-  }
+}
 
-  if(target.matches('.edit')){
-    target.classList.toggle('fa-floppy-disk')
-    console.log(inputTask)
-    if(target.classList.contains('fa-floppy-disk')){
-      inputTask.removeAttribute('disabled')
-      li.querySelector('input[type="text"]').focus()
-       
-    }else{
-      inputTask.setAttribute('disabled', 'disabled')
-      taskList[index].name = inputTask.value
-      showTask()
+function toggleEditTask(listItem, inputTask) {
+    const editButton = listItem.querySelector('.edit')
+    editButton.classList.toggle('fa-floppy-disk')
+    
+    if (editButton.classList.contains('fa-floppy-disk')) {
+        inputTask.removeAttribute('disabled')
+        inputTask.focus()
+    } else {
+        inputTask.setAttribute('disabled', 'disabled')
     }
-  }
+}
 
-  if (target.matches('.input__done')){
-    target.parentElement.querySelector('.edit').style.display ='none'
-    const inputDone = target.parentElement.querySelector('input[type="checkbox"]')
-    console.log(inputDone)
-    console.log(target.parentElement)
-    if(inputDone.checked){
-      taskList[target.parentElement.getAttribute('data-index')].completed = true
-      inputDone.parentElement.classList.add('done')
-    }
-    else{
-      taskList[target.parentElement.getAttribute('data-index')].completed = !true
-      inputDone.parentElement.classList.remove('done')
-    }
-  
-  }
-})
+function updateTaskName(index, newName) {
+    taskList[index].name = newName
+}
+
+function toggleTaskCompletion(listItem, index) {
+    const inputDone = listItem.querySelector('input[type="checkbox"]')
+    taskList[index].completed = inputDone.checked
+    listItem.classList.toggle('done', inputDone.checked)
+}
